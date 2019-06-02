@@ -1,0 +1,54 @@
+
+
+def localize(colors,measurements,motions,sensor_right,p_move):
+    # initializes p to a uniform distribution over a grid of the same dimensions as colors
+    pinit = 1.0 / float(len(colors[0])) / float(len(colors))
+    p = [[pinit for row in range(len(colors[0]))] for col in range(len(colors))]
+    sensor_wrong = 1.0-sensor_right
+    p_stay = 1.0 - p_move
+    for k in range(len(measurements)): 
+        p = move(p,motions[k],p_move, p_stay) 
+        p = sense(p, colors, measurements[k], sensor_right,sensor_wrong)
+    show(p)
+      
+def sense(p,colors, measurements, sensor_right, sensor_wrong):
+    x1 = [[0.0 for row in range(len(p[0]))] for col in range(len(p))]
+    s = 0.0
+    for i in range(len(p)): 
+        for j in range(len(p[i])):
+            hit = (measurements == colors[i][j])
+            x1[i][j] = p[i][j]* (hit*sensor_right + (1-hit)*sensor_wrong)
+            s += x1[i][j]
+    for i in range(len(p)): 
+        for j in range(len(p[i])):
+            x1[i][j] = x1[i][j]/s
+    return x1
+        
+def move(p,y, move, stay):
+    
+    x1 = [[0.0 for row in range(len(p[0]))] for col in range(len(p))]
+    
+    for i in range(len(p)): 
+        for j in range(len(p[i])):
+            x1[i][j] = move * p[i-y[0] %len(p)][j-y[1]%len(p[i])] + stay* p[i][j]
+    return x1
+
+def show(p):
+    for i in range(len(p)):
+        print p[i]
+    
+#############################################################
+# For the following test case, output should be 
+# [[0.01105, 0.02464, 0.06799, 0.04472, 0.02465],
+#  [0.00715, 0.01017, 0.08696, 0.07988, 0.00935],
+#  [0.00739, 0.00894, 0.11272, 0.35350, 0.04065],
+#  [0.00910, 0.00715, 0.01434, 0.04313, 0.03642]]
+# (within a tolerance of +/- 0.001 for each entry)
+
+colors = [['R','G','G','R','R'],
+          ['R','R','G','R','R'],
+          ['R','R','G','G','R'],
+          ['R','R','R','R','R']]
+measurements = ['G','G','G','G','G']
+motions = [[0,0],[0,1],[1,0],[1,0],[0,1]]
+p = localize(colors,measurements,motions,sensor_right = 0.7, p_move = 0.8)
